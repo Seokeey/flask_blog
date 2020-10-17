@@ -1,5 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField
+from flask_wtf.file import FileField, FileAllowed
+from flask_login import current_user
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError
 from flaskblog.models import User
 
@@ -56,3 +58,34 @@ class LoginForm(FlaskForm):
     remember = BooleanField('로그인 정보 저장')
     submit = SubmitField('로그인')
 
+
+class UpdateAccountForm(FlaskForm):
+    username = StringField(
+        '아이디',
+        validators=[DataRequired(), Length(min=2, max=20)]
+    )
+
+    email = StringField(
+        '이메일',
+        validators=[DataRequired(), Email()]
+    )
+
+    picture = FileField('프로필 사진 저장', validators=[FileAllowed(['jpg', 'jpeg', 'png'])])
+    submit = SubmitField('저장하기')
+
+    def validate_username(self, username):
+        if username.data != current_user.username:
+            user = User.query.filter_by(username=username.data).first()
+            if user:
+                raise ValidationError('이미 사용중인 아이디 입니다.')
+
+    def validate_email(self, email):
+        if email.data != current_user.email:
+            user = User.query.filter_by(email=email.data).first()
+            if user:
+                raise ValidationError('이미 사용중인 이메일 입니다.')
+
+class PostForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired()])
+    content = TextAreaField('Content', validators=[DataRequired()])
+    submit = SubmitField('Post')
