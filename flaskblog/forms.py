@@ -86,6 +86,6 @@ class UpdateAccountForm(FlaskForm):
                 raise ValidationError('이미 사용중인 이메일 입니다.')
 
 class PostForm(FlaskForm):
-    title = StringField('Title', validators=[DataRequired()])
-    content = TextAreaField('Content', validators=[DataRequired()])
-    submit = SubmitField('Post')
+    title = StringField('제목', validators=[DataRequired()])
+    content = TextAreaField('내용', validators=[DataRequired()])
+    submit = SubmitField('글쓰기')
