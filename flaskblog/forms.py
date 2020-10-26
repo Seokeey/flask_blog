@@ -89,3 +89,35 @@ class PostForm(FlaskForm):
     title = StringField('제목', validators=[DataRequired()])
     content = TextAreaField('내용', validators=[DataRequired()])
     submit = SubmitField('글쓰기')
+
+
+class RequestResetForm(FlaskForm):
+    email = StringField(
+        '이메일',
+        validators=[DataRequired(), Email()]
+    )
+    submit = SubmitField('비밀번호 재설정 요청')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user is None:
+            raise ValidationError('입력하신 이메일이 존재하지 않습니다. 먼저 회원가입을 해주세요.')
+        
+        
+class ResetPasswordForm(FlaskForm):
+    
+    password = PasswordField(
+        '비밀번호', validators=[DataRequired()]
+    )
+    
+    confirm_password = PasswordField(
+        '비밀번호 재확인', validators=[
+            DataRequired(),
+            EqualTo(fieldname='password', message='비밀번호가 일치하지 않습니다.'),
+            Length(min=8, 
+                   max=20,
+                   message='비밀번호는 최소 8글자 최대 20글자 이내로 입력해 주세요.'),
+        ]
+    )
+
+    submit = SubmitField('비밀번호 재설정')

@@ -1,19 +1,21 @@
 import os
+import json
 import secrets
 from PIL import Image
 from flask import render_template, redirect, url_for, flash, request, abort
 from flaskblog import app, db, bcrypt
-from flaskblog.forms import RegistrationForm, LoginForm, UpdateAccountForm, PostForm
+from flaskblog.forms import (RegistrationForm, LoginForm, UpdateAccountForm, 
+                             PostForm, RequestResetForm, ResetPasswordForm)
 from flaskblog.models import User, Post
 from flask_login import login_user, current_user, logout_user, login_required
-
-
+from flask_mail import Message
 
 @app.route("/")
 @app.route("/home")
 def home():
-    posts = Post.query.all()
-    return render_template("home.html", posts=posts)
+    page = request.args.get('page', 1, type=int)
+    posts = Post.query.order_by(Post.date_posted.desc()).paginate(page=page, per_page=5)
+    return render_template('home.html', posts=posts)
 
 
 @app.route("/about")
@@ -101,7 +103,7 @@ def new_post():
         post = Post(title=form.title.data, content=form.content.data, author=current_user)
         db.session.add(post)
         db.session.commit()
-        flash('글이 작성되었습니다!', 'success')
+        flash('새 게시글을 작성하였습니다!', 'success')
         return redirect(url_for('home'))
     return render_template('create_post.html', title='New Post',
                             form=form, legend='새 게시글 작성하기')
@@ -142,3 +144,55 @@ def delete_post(post_id):
     flash('게시글이 삭제되었습니다!', 'success')
     return redirect(url_for('home'))
 
+
+@app.route("/user/<string:username>")
+def user_posts(username):
+    page = request.args.get('page', 1, type=int)
+    user = User.query.filter_by(username=username).first_or_404()
+    posts = Post.query.filter_by(author=user)\
+        .order_by(Post.date_posted.desc())\
+        .paginate(page=page, per_page=5)
+    return render_template('user_posts.html', posts=posts, user=user)
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    msg = Message('비밀번호 재설정하기',
+                  sender='noreply@demo.com', 
+                  recipients=[user.email])
+    msg.body = f'''비밀번호를 재설정하기 위해 다음의 링크를 방문해주세요:
+    {url_for('reset_token', token=token, _external=True)} 
+    만약 비밀번호 재설정하기를 하신적이 없는 경우 뒤로가기를 눌러주세요.
+    '''
+    
+
+@app.route("/reset_password", methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    form = RequestResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        send_reset_email(user)
+        flash('비밀번호 재설정 이메일을 전송하였습니다!', 'info')
+        return redirect(url_for('login'))
+    return render_template('reset_request.html', title='Reset Password',
+                            form=form)
+
+
+@app.route("/reset_password/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    user = User.verify_reset_token(token)
+    if user is None:
+        flash('유효하지 않거나 만료된 토큰입니다.', 'warning')
+        return redirect(url_for('reset_request'))
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user.password = hashed_password
+        db.session.commit()
+        flash('비밀번호 재설정이 완료됐습니다!', '')
+        return redirect(url_for('login'))
+    return render_template('reset_token.html', title='Reset Password',
+                            form=form)
