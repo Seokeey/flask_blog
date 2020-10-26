@@ -3,7 +3,7 @@ import json
 import secrets
 from PIL import Image
 from flask import render_template, redirect, url_for, flash, request, abort
-from flaskblog import app, db, bcrypt
+from flaskblog import app, db, bcrypt, mail
 from flaskblog.forms import (RegistrationForm, LoginForm, UpdateAccountForm, 
                              PostForm, RequestResetForm, ResetPasswordForm)
 from flaskblog.models import User, Post
@@ -163,8 +163,8 @@ def send_reset_email(user):
     {url_for('reset_token', token=token, _external=True)} 
     만약 비밀번호 재설정하기를 하신적이 없는 경우 뒤로가기를 눌러주세요.
     '''
-    
-
+    mail.send(msg)
+   
 @app.route("/reset_password", methods=['GET', 'POST'])
 def reset_request():
     if current_user.is_authenticated:
@@ -175,8 +175,7 @@ def reset_request():
         send_reset_email(user)
         flash('비밀번호 재설정 이메일을 전송하였습니다!', 'info')
         return redirect(url_for('login'))
-    return render_template('reset_request.html', title='Reset Password',
-                            form=form)
+    return render_template('reset_request.html', title='Reset Password', form=form)
 
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
