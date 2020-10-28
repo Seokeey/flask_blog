@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-
+"""Paginate 기능 테스트를 위해 Selenium을 이용한 dummy post 생성 혹은 삭제
+"""
 
 
 import os
@@ -31,30 +32,34 @@ def delete_posts(count=26):
                                       f'/html/body/main/div/div[1]/article[{i}]/div/h2/a')
         if 'Paginate' in article.text:
             article.click()
-            driver.find_element(By.XPATH, '/html/body/main/div/div[1]/article/div/div/div/button').click()
+            driver.find_element(By.XPATH,
+                                '/html/body/main/div/div[1]/article/div/div/div/button').click()
             time.sleep(1)
-            driver.find_element(By.XPATH, '//*[@id="deleteModal"]/div/div/div[2]/form/input').click()
+            driver.find_element(By.XPATH,
+                                '//*[@id="deleteModal"]/div/div/div[2]/form/input').click()
             time.sleep(0.5)
 
-driver = webdriver.Chrome(DRIVER_PATH)
-driver.get(BLOG_URL)
 
-login_btn = driver.find_element(By.XPATH, '//*[@id="navbarToggle"]/div[2]/a[1]')
-login_btn.click()
 
-email = driver.find_element(By.XPATH, '//*[@id="email"]')
-email.send_keys(BLOG_EMAIL)
-time.sleep(0.1)
-password = driver.find_element(By.XPATH, '//*[@id="password"]')
-password.send_keys(BLOG_PASSWORD)
-time.sleep(0.1)
+if __name__ == "__main__":
+    driver = webdriver.Chrome(DRIVER_PATH)
+    driver.get(BLOG_URL)
 
-login = driver.find_element(By.XPATH, '//*[@id="submit"]')
-login.click()
-time.sleep(0.1)
+    login_btn = driver.find_element(By.XPATH, '//*[@id="navbarToggle"]/div[2]/a[1]')
+    login_btn.click()
 
-delete_posts()
+    email = driver.find_element(By.XPATH, '//*[@id="email"]')
+    email.send_keys(BLOG_EMAIL)
+    time.sleep(0.1)
+    password = driver.find_element(By.XPATH, '//*[@id="password"]')
+    password.send_keys(BLOG_PASSWORD)
+    time.sleep(0.1)
 
+    login = driver.find_element(By.XPATH, '//*[@id="submit"]')
+    login.click()
+    time.sleep(0.1)
+
+write_posts()
 
 
 
