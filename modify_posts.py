@@ -59,7 +59,8 @@ if __name__ == "__main__":
     login.click()
     time.sleep(0.1)
 
-write_posts()
+    write_posts()
+    # delete_posts()
 
 
 
