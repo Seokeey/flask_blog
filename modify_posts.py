@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Paginate 기능 테스트를 위해 Selenium을 이용한 dummy post 생성 혹은 삭제
+"""Paginate 기능 테스트용dummy post 생성 혹은 삭제를 위한 파일
 """
 
 
@@ -30,6 +30,7 @@ def delete_posts(count=26):
         time.sleep(1)
         article = driver.find_element(By.XPATH,
                                       f'/html/body/main/div/div[1]/article[{i}]/div/h2/a')
+        # TODO: 페이지가 완전히 로드된 후 클릭되는 기능 추가하기
         if 'Paginate' in article.text:
             article.click()
             driver.find_element(By.XPATH,
